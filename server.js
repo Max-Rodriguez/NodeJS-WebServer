@@ -1,49 +1,43 @@
 // ----- Load Node Modules -----
+
 const http = require('http');
-const fs = require('fs');
+const request_handler = require('./requestHandler');
 
-
-// ----- HTML Resources Paths -----
-const path = './html_pages/'
-
-const path_home = path + 'home.html';
-const path_404 = path + '404.html';
+console.log("Imported Required Modules!")
 
 
 // ----- Create Server Listener Function-----
+
 const server = http.createServer((request, response) => {
+
     var url = request.url;
 
     if (url === "/") {
-        // Set Response Header
-        const code = 200;
-        response.writeHead(code, { 'Content-Type': 'text/html' }); 
-        
-        // Send Response Content
-        const content = fs.readFileSync(path_home, 'utf8');
-        response.write(content);
 
+        const http_code = 200;
+        
+        response = request_handler.homepage(response, http_code);
         response.end();
 
-        console.log("Served response; Code " + code);
+        console.log("Served Response; Code " + http_code);
+
     }
 
     else {
-        // No correct path, return code 404 header.
-        const code = 404;
-        response.writeHead(code, { 'Content-Type': 'text/html' });
-
-        const content = fs.readFileSync(path_404, 'utf8');
-        response.write(content);
-
+        
+        const http_code = 404;
+        
+        response = request_handler.code_404(response);
         response.end();
 
-        console.log("Served response; Code " + code);
+        console.log("Served Response; Code " + http_code);
+
     }
 });
 
 
 // ----- Initiate Server -----
+
 const port = 3000;
 server.listen(port);
 
