@@ -13,24 +13,20 @@ const server = http.createServer((request, response) => {
     var url = request.url;
 
     if (url === "/") {
-
-        const http_code = 200;
         
-        response = request_handler.homepage(response, http_code);
+        response = request_handler.homepage(response);
         response.end();
 
-        console.log("Served Response; Code " + http_code);
+        console.log("Served Response; Code 200");
 
     }
 
     else {
         
-        const http_code = 404;
-        
         response = request_handler.code_404(response);
         response.end();
 
-        console.log("Served Response; Code " + http_code);
+        console.log("Served Response; Code 404");
 
     }
 });

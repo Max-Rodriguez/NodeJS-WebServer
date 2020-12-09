@@ -12,10 +12,10 @@ const path_404 = path + '404.html';
 
 class RequestHandler {
 
-    homepage(response, http_code){
+    homepage(response){
 
         // Header
-        response.writeHead(http_code, { 'Content-Type': 'text/html' }); 
+        response.writeHead(200, { 'Content-Type': 'text/html' }); 
         
         // Content
         const content = fs.readFileSync(path_home, 'utf8');
