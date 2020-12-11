@@ -7,9 +7,10 @@ const fs = require('fs');
 
 // ----- Default Server Variables -----
 
-let prefix = "[Server]: ";
-let homepage = "/home.html";
-let port = 3000;
+const prefix = "[Server]: ";
+const homepage = "/home.html";
+const page404 = "/404.html";
+const port = 3000;
 
 
 // ----- Utils -----
@@ -87,11 +88,15 @@ const server = http.createServer( (req, res) => {
         let content;
 
         try {
+
             content = fs.readFileSync(request_path, 'utf-8');
             file_found = true;
-        }
 
+        }
+        
         catch {
+
+            // Redirecting Root Requests to Homepage, Invalid Requests to 404.
 
             if (request_path !== "./domain/") {
 
@@ -99,7 +104,7 @@ const server = http.createServer( (req, res) => {
 
                 res.end(); // Send Response
 
-                serverLog("log", "Code 302; Redirected Request to 404. Requested URL [ " + url_string + " ]")
+                serverLog("log", "Code 302; Redirected Request to [ " + page404 + " ]; Requested URL [ " + url_string + " ]");
 
             } else {
 
@@ -107,7 +112,7 @@ const server = http.createServer( (req, res) => {
 
                 res.end(); // Send Response
 
-                serverLog("log", "Code 302; Redirected Request to Homepage. Requested URL [ " + url_string + " ]")
+                serverLog("log", "Code 302; Redirected Request to [ " + homepage + " ]; Requested URL [ " + url_string + " ]");
 
             }
 
