@@ -1,82 +1,156 @@
-// ----- Load Node Modules ----- //
+// ----- Node Module Imports -----
 
 const http = require('http');
 const url = require('url');
-const ResourceHandler = require('./resourceHandler');
-
-console.log("Imported Required Modules!")
+const fs = require('fs');
 
 
-// ----- Create Server Listener Function----- //
+// ----- Default Server Variables -----
 
-const server = http.createServer((request, response) => {
+let prefix = "[Server]: ";
+let homepage = "/home.html";
+let port = 3000;
 
-    // Request Variables
-    const req_url = url.parse(request.url, true);
-    const req_headers = request.headers;
-    const req_query = req_url.query;
-    const req_method = request.method.toLowerCase();
 
-    // Preparing URL Parsed
-    let path = req_url.pathname;
-    path = path.replace(/^\/+|\/+$/g, ""); // Removing '/' if at end of URL.
+// ----- Utils -----
 
-    // ----- Routing Requests ----- //
+// Create A Time Stamp
 
-    request.on("data", () => {
+function getTimeStamp() {
 
-        console.log("Additional Data Received From Request..")
-        // This listener is needed for "end" listener to work.
+    const moment = new Date();
+    const local_string = moment.toLocaleString();
+    let timestamp = "[" + local_string + "] ";
 
-    })
+    return timestamp
 
-    request.on("end", () => {
+}
 
-        let route_function = typeof routes[path] !== "undefined" ? routes[path] : routes["___404___"];
-        // Search for path on routes dictionary, else get 404 function.
+// Console Logging
 
-        let data = {
+const log_types = {
 
-            path: path,
-            queryString: req_query,
-            headers: req_headers,
-            method: req_method
+    "log": (ts, msg) => { console.log(ts + prefix + msg); },
 
-        }
+    "warn": (ts, msg) => { console.warn(ts + "[WARN]: " + msg); },
 
-        route_function(data, response);
+    "error": (ts, msg) => { console.error(ts + "[ERROR]: " + msg); },
 
-        console.log("Served Response for route [ /" + path + " ]")
+    "_error": (ts, type) => {
 
-    })
-
-});
-
-// ----- Routing List ----- //
-
-const routes = {
-
-    "": (data, response) => {
-
-        response = ResourceHandler.homepage(response);
-        response.end();
-
-    },
-
-    "___404___": (data, response) => {
-
-        response = ResourceHandler.code_404(response);
-        response.end();
+        console.error(ts + "[ERROR]: " + 
+            "Utils Logger: Type '" + type + "' Invalid.");
 
     }
 
 }
 
+function serverLog(type, msg) {
 
-// ----- Initiate Server ----- //
+    const timestamp = getTimeStamp();
 
-const port = 3000;
+    function type_not_found() {
 
-server.listen(port, () => {
-    console.log("Web Server Listening On Port " + port + "..");
+        let err_f = types["_error"];
+        
+        err_f(timestamp, type);
+
+    }
+
+    const log_function = typeof log_types[type] !== "undefined" ? log_types[type] : type_not_found();
+
+    log_function(timestamp, msg);
+
+}
+
+
+// ----- Constructing HTTP Server -----
+
+serverLog("log", "Initializing HTTP Server ..")
+
+const server = http.createServer( (req, res) => {
+
+    // Parse URL Path Requested
+    const path = url.parse(req.url, true);
+    const url_string = path.pathname;
+
+
+    req.on("data", (data) => {
+        // Data Listener Required For Request End Listener.
+    });
+
+    req.on("end", () => {
+
+        let request_path = "./domain" + url_string;
+        
+        let file_found = false;
+        let content;
+
+        try {
+            content = fs.readFileSync(request_path, 'utf-8');
+            file_found = true;
+        }
+
+        catch {
+
+            if (request_path !== "./domain/") {
+
+                content = fs.readFileSync("./domain/404.html", 'utf-8');
+
+                res.writeHead(404, "NOT FOUND", { "Content-Type": "text/html" });
+                res.write(content);
+
+                res.end(); // Send Response
+
+                serverLog("log", "Code 404; Served Request for URL [ " + url_string + " ]")
+
+            } else {
+
+                let home_path = "./domain" + homepage;
+                content = fs.readFileSync(home_path, 'utf-8');
+
+                res.writeHead(200, "OK", { "Content-Type": "text/html" });
+                res.write(content);
+
+                res.end(); // Send Response
+
+                serverLog("log", "Code 200; Served Request for URL [ " + url_string + " ]")
+
+            }
+
+        }
+
+        if (file_found) {
+
+            res.writeHead(200, "OK", { "Content-Type": "text/html" });
+            res.write(content);
+
+            res.end(); // Send Response
+
+            serverLog("log", "Code 200; Served Request for URL [ " + url_string + " ]")
+
+        }
+
+    });
+
 });
+
+
+// ----- Initialize Listening -----
+
+try {
+
+    server.listen(port, () => {
+
+        serverLog("log", "Web Server Listening On Port (" + port + ") ..");
+    
+    });
+
+}
+
+catch (error) {
+    
+    serverLog("warn", "Failed to listen on port " + port + " ..");
+    serverLog("error", error); // Log error message.
+
+}
