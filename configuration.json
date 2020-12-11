@@ -1,0 +1,9 @@
+{
+
+    "default_port": 3000,
+
+    "root_page": "/home.html",
+
+    "not_found_404": "/404.html"
+    
+}

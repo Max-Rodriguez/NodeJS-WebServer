@@ -1,19 +1,56 @@
-// ----- Node Module Imports -----
+// ----- Node Module Imports ----- //
 
 const http = require('http');
 const url = require('url');
 const fs = require('fs');
 
 
-// ----- Default Server Variables -----
+// ----- Default Server Variables ----- //
 
-const prefix = "[Server]: ";
-const homepage = "/home.html";
-const page404 = "/404.html";
-const port = 3000;
+let homepage = "/home.html";
+let page404 = "/404.html";
+let port = 3000;
 
 
-// ----- Utils -----
+// ----- Parsing JSON Configuration ----- //
+
+try {
+    var json_config = fs.readFileSync("./configuration.json", 'utf-8');
+} catch (error) {
+    console.error("[ERROR]: Configuration JSON could not be read.");
+    console.error(error);
+}
+
+try {
+    var config = JSON.parse(json_config);
+} catch (error) {
+    console.error("[ERROR]: Could not parse JSON Configuration String.");
+    console.error(error);
+}
+
+
+// Load Port Variable
+try { port = config.default_port; 
+    console.log("[Initialization]: Listening Port: " + port);} 
+    
+    catch { console.warn("[WARN]: No Default Port Set in configuration.json!"); }
+
+
+// Load Homepage Path Variable
+try { homepage = config.root_page; 
+    console.log("[Initialization]: Root Page Path: " + homepage);} 
+
+    catch { console.warn("[WARN]: No Homepage Path Set in configuration.json!"); }
+
+
+// Load 404 Path Variable
+try { page404 = config.not_found_404; 
+    console.log("[Initialization]: Page 404 Path: " + page404);} 
+
+    catch { console.warn("[WARN]: No 404 Page Path Set in configuration.json!"); }
+
+
+// ----- Utils ----- //
 
 // Create A Time Stamp
 
@@ -31,7 +68,7 @@ function getTimeStamp() {
 
 const log_types = {
 
-    "log": (ts, msg) => { console.log(ts + prefix + msg); },
+    "log": (ts, msg) => { console.log(ts + "[Server]: " + msg); },
 
     "warn": (ts, msg) => { console.warn(ts + "[WARN]: " + msg); },
 
@@ -65,7 +102,7 @@ function serverLog(type, msg) {
 }
 
 
-// ----- Constructing HTTP Server -----
+// ----- Constructing HTTP Server ----- //
 
 serverLog("log", "Initializing HTTP Server ..")
 
@@ -86,6 +123,8 @@ const server = http.createServer( (req, res) => {
         
         let file_found = false;
         let content;
+
+        // ----- Routing Requests ----- //
 
         try {
 
@@ -134,7 +173,7 @@ const server = http.createServer( (req, res) => {
 });
 
 
-// ----- Initialize Listening -----
+// ----- Initialize Listening ----- //
 
 try {
 
