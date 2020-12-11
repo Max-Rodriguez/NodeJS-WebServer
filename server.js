@@ -95,26 +95,19 @@ const server = http.createServer( (req, res) => {
 
             if (request_path !== "./domain/") {
 
-                content = fs.readFileSync("./domain/404.html", 'utf-8');
-
-                res.writeHead(404, "NOT FOUND", { "Content-Type": "text/html" });
-                res.write(content);
+                res.writeHead(302, { "Location": "/404.html" });
 
                 res.end(); // Send Response
 
-                serverLog("log", "Code 404; Served Request for URL [ " + url_string + " ]")
+                serverLog("log", "Code 302; Redirected Request to 404. Requested URL [ " + url_string + " ]")
 
             } else {
 
-                let home_path = "./domain" + homepage;
-                content = fs.readFileSync(home_path, 'utf-8');
-
-                res.writeHead(200, "OK", { "Content-Type": "text/html" });
-                res.write(content);
+                res.writeHead(302, { "Location": "/home.html" });
 
                 res.end(); // Send Response
 
-                serverLog("log", "Code 200; Served Request for URL [ " + url_string + " ]")
+                serverLog("log", "Code 302; Redirected Request to Homepage. Requested URL [ " + url_string + " ]")
 
             }
 
