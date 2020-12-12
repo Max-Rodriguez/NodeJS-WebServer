@@ -2,6 +2,7 @@
 
 const http = require('http');
 const url = require('url');
+const path = require('path');
 const fs = require('fs');
 
 
@@ -101,6 +102,33 @@ function serverLog(type, msg) {
 
 }
 
+// Return Response Content Type By File Extension
+
+function return_content_type(filepath) {
+
+    const file_extension = path.extname(filepath).toLowerCase(); // Get extension.
+
+    switch(file_extension) {
+
+        // Content Types by Extension Cases
+        case '.html': return "text/html";
+        case '.htm': return "text/html";
+        case '.css': return "text/css";
+        case '.ico': return "image/x-icon";
+        case '.js': return "application/javascript";
+        case '.png': return "image/png";
+        case '.jpeg': return "text/jpeg";
+        case '.jpg': return "text/jpeg";
+        case '.txt': return "text/plain";
+
+        // Unrecognized Extension
+        default:
+            return "text/plain";
+
+    }
+
+}
+
 
 // ----- Constructing HTTP Server ----- //
 
@@ -120,53 +148,59 @@ const server = http.createServer( (req, res) => {
     req.on("end", () => {
 
         let request_path = "./domain" + url_string;
-        
-        let file_found = false;
-        let content;
+
+        function serve_request(target) {
+
+            read_stream = fs.createReadStream(target);
+
+            // On Data Stream Read
+            read_stream.once("readable", () => {
+
+                let content = read_stream.read();
+
+                res.writeHead(200, "OK", { "Content-Type": return_content_type(target) });
+                res.write(content);
+    
+                res.end(); // Send Response
+    
+                serverLog("log", "Code 200; Served Request for URL [ " + url_string + " ]")
+
+            });
+
+        }
+
+        function redirect_request(target) {
+
+            res.writeHead(302, { "Location": target });
+
+            res.end(); // Send Response
+
+            serverLog("log", "Code 302; Redirected Request to [ " + target + " ]; Requested URL [ " + url_string + " ]");
+
+        }
 
         // ----- Routing Requests ----- //
 
-        try {
+        if (request_path == "./domain/") {
 
-            content = fs.readFileSync(request_path, 'utf-8');
-            file_found = true;
+            redirect_request(homepage);
 
-        }
-        
-        catch {
+        } else {
 
-            // Redirecting Root Requests to Homepage, Invalid Requests to 404.
+            // Validate Requested URL Path
 
-            if (request_path !== "./domain/") {
+            if ( fs.existsSync(request_path) ) {
 
-                res.writeHead(302, { "Location": "/404.html" });
-
-                res.end(); // Send Response
-
-                serverLog("log", "Code 302; Redirected Request to [ " + page404 + " ]; Requested URL [ " + url_string + " ]");
+                serve_request(request_path);
 
             } else {
 
-                res.writeHead(302, { "Location": "/home.html" });
-
-                res.end(); // Send Response
-
-                serverLog("log", "Code 302; Redirected Request to [ " + homepage + " ]; Requested URL [ " + url_string + " ]");
+                redirect_request(page404);
 
             }
 
         }
 
-        if (file_found) {
-
-            res.writeHead(200, "OK", { "Content-Type": "text/html" });
-            res.write(content);
-
-            res.end(); // Send Response
-
-            serverLog("log", "Code 200; Served Request for URL [ " + url_string + " ]")
-
-        }
 
     });
 
