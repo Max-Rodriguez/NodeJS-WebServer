@@ -8,7 +8,8 @@
 ### ✔️ User-Friendly JSON Configuration
 ### ✔️ Asynchronous Request Handling
 ### ✔️ Request Routing Based On Root 'Domain' Directory
-### ✔️ Content Types Served Accordingly To File Extensions
+### ✔️ Supported Content Types and Transfer Types
+### ✔️ Finally fixed file buffering after 2 days
 ### ❌ I'm A Teapot. [HTTP_418]
 -------------------------------------------
 ## Web Server Installation
@@ -19,4 +20,4 @@ Step 2: Run Server Module
 ```console
 C:\..\Repository> node server.js
 ```
-### One line after download, and your web server is running.
+### One line and your web server is running.

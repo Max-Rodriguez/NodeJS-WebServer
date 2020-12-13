@@ -4,6 +4,7 @@ const http = require('http');
 const url = require('url');
 const path = require('path');
 const fs = require('fs');
+const { read } = require('fs/promises');
 
 
 // ----- Default Server Variables ----- //
@@ -111,15 +112,30 @@ function return_content_type(filepath) {
     switch(file_extension) {
 
         // Content Types by Extension Cases
+
+        // Text
         case '.html': return "text/html";
         case '.htm': return "text/html";
         case '.css': return "text/css";
-        case '.ico': return "image/x-icon";
-        case '.js': return "application/javascript";
-        case '.png': return "image/png";
-        case '.jpeg': return "text/jpeg";
-        case '.jpg': return "text/jpeg";
         case '.txt': return "text/plain";
+
+        // Application
+        case '.js': return "application/javascript";
+
+        // Images
+        case '.ico': return "image/x-icon";
+        case '.png': return "image/png";
+        case '.jpeg': return "image/jpeg";
+        case '.jpg': return "image/jpeg";
+        case '.bmp': return "image/bmp";
+        case '.gif': return "image/gif";
+
+        // Fonts
+        case '.ttf': return "font/ttf";
+        case '.otf': return "font/otf";
+        case '.sfnt': return "font/sfnt";
+        case '.woff': return "font/woff";
+        case '.woff2': return "font/woff2";
 
         // Unrecognized Extension
         default:
@@ -129,6 +145,24 @@ function return_content_type(filepath) {
 
 }
 
+// Return Transfer Type
+function return_transfer_type(str_type) {
+
+    let type_prefix = str_type.substr(0, 5);
+
+    switch (type_prefix) {
+
+        case "font/": return "binary";
+        case "image": return "binary";
+
+        case "text/": return "utf8";
+        case "appli": return "utf8";
+
+        default: return "binary";
+
+    }
+
+}
 
 // ----- Constructing HTTP Server ----- //
 
@@ -151,21 +185,38 @@ const server = http.createServer( (req, res) => {
 
         function serve_request(target) {
 
-            read_stream = fs.createReadStream(target);
+            let content_type = return_content_type(target)
 
-            // On Data Stream Read
-            read_stream.once("readable", () => {
+            let read_type = return_transfer_type(content_type);
 
-                let content = read_stream.read();
+            let chunked = [];
 
-                res.writeHead(200, "OK", { "Content-Type": return_content_type(target) });
-                res.write(content);
+            read_stream = fs.createReadStream(target, read_type);
+
+            // On Data Stream, Add Chunk
+            read_stream.on("data", (chunk) => {
+
+                    chunked.push(chunk); // Add buffer to chunked.
+
+            });
+
+            read_stream.on("end", () => {
+
+                let content_type = return_content_type(target)
+
+                let transfer_type = return_transfer_type(content_type);
+
+                res.writeHead(200, "OK", { "Content-Type": content_type });
+
+                let content = chunked.join(''); // Join all buffers into 1 string with no spaces.
+
+                res.write(content, transfer_type);
     
                 res.end(); // Send Response
     
                 serverLog("log", "Code 200; Served Request for URL [ " + url_string + " ]")
 
-            });
+            })
 
         }
 
