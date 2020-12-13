@@ -196,7 +196,7 @@ const server = http.createServer( (req, res) => {
             // On Data Stream, Add Chunk
             read_stream.on("data", (chunk) => {
 
-                    chunked.push(chunk); // Add buffer to chunked.
+                chunked.push(chunk); // Add buffer to chunked.
 
             });
 
